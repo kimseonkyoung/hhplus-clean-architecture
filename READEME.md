@@ -52,8 +52,8 @@
 
 3. 특강 신청 완료 목록 조회 API
 
-- GET /api/users/{suerId}/lectures
-- userUd로 신청 완료된 특강 목록 조회.
+- GET /api/lectures/completed
+- userId로 신청 완료된 특강 목록 조회.
 
 ### 고려사항
 1. 특강 신청 API
@@ -80,7 +80,7 @@
 
 ### 테스트케이스
 
-#### 1. 특강 신청 API (POST /lectures/{lectureId}/apply)
+#### 1. 특강 신청 API
 ##### 01. 정상케이스
 - 동일한 userId로 신청 가능한 특강에 정상적으로 신청.
 - 30명 정원 미달 상태에서 신청 성공.
@@ -102,7 +102,7 @@
 - 신청 중 실패 발생 시 데이터 롤백 확인.
 - 성공 시 데이터가 정확히 저장되었는지 확인.
 
-#### 3. 특강 신청 가능 목록 API (GET /lectures/available)
+#### 3. 특강 신청 가능 목록 API
 
 ##### 01. 정상 케이스
 
@@ -112,7 +112,6 @@
 
 ##### 02. 에러 케이스
 
-- 잘못된 날짜 형식 요청.
 - 신청 가능한 특강이 없는 경우, 빈 목록 반환.
 
 ##### 03. 경계값 테스트
@@ -120,7 +119,7 @@
 - 정원이 정확히 30명인 특강이 반환되지 않는지 확인.
 - 신청 가능 특강이 다수일 때 확인.
 
-#### 4. 특강 신청 완료 목록 조회 API (GET /users/{userId}/lectures)
+#### 4. 특강 신청 완료 목록 조회 API 
 ##### 01. 정상 케이스
 - 특정 userId로 신청 완료된 특강 목록이 정상적으로 반환.
 - 반환 데이터에 lectureId, 이름, 강연자 정보 포함.
@@ -195,7 +194,7 @@
 ```
 
 ### ERD
-![img_1.png](img_1.png)
+![img_4.png](img_4.png)
 
 ```
 CREATE TABLE users (
@@ -207,7 +206,8 @@ lecture_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 title VARCHAR(100) NOT NULL,
 instructor VARCHAR(50) NOT NULL,
 lecture_date DATE,
-capacity INT NOT NULL DEFAULT 30
+capacity INT NOT NULL DEFAULT 30,
+current_enrollment INT DEFAULT 0
 );
 
 CREATE TABLE enrollments (
@@ -218,16 +218,6 @@ enrolled_at DATETIME NOT NULL,
 UNIQUE KEY unique_user_lecture (user_id, lecture_id), -- 신청 중복방지
 KEY idx_user_id (user_id),                           -- 인덱스 1
 KEY idx_lecture_id (lecture_id)                      -- 인덱스 2
-);
-
-CREATE TABLE lecture_schedule (
-schedule_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-lecture_id BIGINT NOT NULL,
-lecture_date DATE,
-day_of_week ENUM('MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'),
-start_time TIME NOT NULL,
-end_time TIME NOT NULL,
-KEY idx_lecture_id (lecture_id)                      -- 인덱스 1
 );
 ```
 
@@ -240,6 +230,7 @@ KEY idx_lecture_id (lecture_id)                      -- 인덱스 1
 - instructor: 강연자
 - lecture_date: 특강일
 - capacity: 특강 제한 인원
+- current_enrollment: 특강 신청 인원
 
 3. enrollments(특강신청) 테이블
 - enrollment_id: 특강 신청 공유 아이디
@@ -247,14 +238,17 @@ KEY idx_lecture_id (lecture_id)                      -- 인덱스 1
 - lecture_id: 특강 아이디
 - enrolled_at: 특강 신청 시간
 
-4. lecture_schedule(특강 시간표) 테이블
-- schedule_id: 특강시간표 고유 아이디
-- lecture_id: 특강 아이디
-- lecture_date: 특강일
-- day_of_weak: 특강요일
-- start_time: 특강 시작시간
-- end_time: 특강 종료시간
+01. 사용자 및 강의 정보 관리: users 테이블은 사용자 정보를 저장하고, lectures 테이블은 강의 정보를 관리하여 두 테이블 간의 관계를 설정합니다.
 
+02. 신청 중복 방지: enrollments 테이블에 UNIQUE KEY unique_user_lecture (user_id, lecture_id)를 추가하여 동일한 사용자가 같은 강의를 중복 신청할 수 없도록 보장합니다.
+
+03. 강의 정원 관리: lectures 테이블의 capacity와 current_enrollment 컬럼을 사용하여 강의의 정원 및 현재 수강 인원을 추적합니다.
+
+04. 효율적인 조회를 위한 인덱스 설정: enrollments 테이블에 user_id와 lecture_id에 각각 인덱스를 설정하여, 빠른 검색과 성능 최적화를 도모합니다.
+
+05. 신청 성공 사용자만 등록: 특강 신청에 실패한 사용자는 fail 처리되므로, enrollments 테이블에는 신청에 성공한 사용자만 등록됩니다.
+
+06. 외래키를 설정하지 않은 이유: 테이블 간에 외래키를 설정하지 않은 이유는 DB에 lock이 걸렸을 시 참조 테이블에도 연쇄적으로 lock이 걸리지 않도록 하기 위함입니다.
 
 ### KEY POINT SOLVED THINKING
 1. 클린 아키텍쳐를 이해하고 지향하기 
@@ -262,4 +256,10 @@ KEY idx_lecture_id (lecture_id)                      -- 인덱스 1
 -> why? 그랬을까 이해하고 학습하기
 2. DB 설계 및 동시성 제어 관점 이해하기
 -> 다수의 인스턴스에서 사용자가 요청할 때는 lock을 어떻게 걸어야 하는가 학습하기
--> 효율적인 테이블 설계와 제약조건 이해하기
+
+### 현재 문제점
+1. DB 비관적 lock 제어시 제한된 정원 인원은 보장하나 선착순으로 신청이 성공하지 않는다.
+2. 테스트 코드 -> 프로덕트 코드로 작업을 진행해야하나, 촉박한 시간에 밀려 일부는 프로덕트 코드를 짜고 테스트를 진행했기 때문에
+쓸데없는 프로덕트 코드가 오염되었다. 
+3. 시간에 촉박하여 커밋단위의 메시지를 조절하지 못하였다. 파일도 깔끔하게 정리하지 못했다.
+
