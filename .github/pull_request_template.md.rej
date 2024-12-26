@@ -1,0 +1,19 @@
+diff a/.github/pull_request_template.md b/.github/pull_request_template.md	(rejected hunks)
+@@ -33,13 +33,8 @@
+ 
+ ### Keep
+ <!-- 유지해야 할 좋은 점 -->
+-1. 모르는 기술에 대해 포탈과 공식문서, 지피티를 활용해서 공부를 병행하면서 과제에 집중했다.
++
+ ### Problem
+ <!--개선이 필요한 점-->
+-1. 시간이 촉박한 나머지 테스트와 프로덕트 코드를 100% 병행하지 못했다.
+-2. 깃 커밋 메시지나 pr 작성에 시간을 들이지 못했다.
+ 
+-### Try
+-1. 요구사항 분석은 미리 진행하기.
+-2. 기술은 최대한 지피티에 대해 물어보기 보다는 공식문서나 다른 사람이 구현한 코드 참고 - 지피티에게도 실제 적용 코드보다는 가이드라인 정도만 물어보고 학습
+-3. 깃 커밋 메시지나 pr, readme 등 문서나 기록에 투자할 시간의 비중을 늘리자.
+\ No newline at end of file
++### Try
+\ No newline at end of file

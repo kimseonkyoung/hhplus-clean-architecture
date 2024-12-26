@@ -194,7 +194,7 @@
 ```
 
 ### ERD
-![img_4.png](img_4.png)
+![img_4.png](ERD.png)
 
 ```
 CREATE TABLE users (
