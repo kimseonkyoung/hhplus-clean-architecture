@@ -1,4 +1,7 @@
 package com.hanghae.lecture.interfaces.api.dto;
 
-public class ErrorResponse {
+public record ErrorResponse(
+        String code,
+        String message
+) {
 }
